@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>踩地雷遊戲</title>
+    <style>
+        #game {
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            gap: 1px;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: #ddd;
+            border: 1px solid #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .revealed {
+            background-color: #fff;
+        }
+        .mine {
+            background-color: #f00;
+        }
+    </style>
+</head>
+<body>
+    <div id="game"></div>
+    <script>
+        const game = document.getElementById('game');
+        const size = 10;
+        const mineCount = 10;
+        let mines = [];
+        let cells = [];
+
+        function initGame() {
+            // 生成地雷
+            while (mines.length < mineCount) {
+                const mine = Math.floor(Math.random() * size * size);
+                if (!mines.includes(mine)) {
+                    mines.push(mine);
+                }
+            }
+
+            // 創建格子
+            for (let i = 0; i < size * size; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', revealCell);
+                game.appendChild(cell);
+                cells.push(cell);
+            }
+        }
+
+        function revealCell(e) {
+            const index = parseInt(e.target.dataset.index);
+            if (mines.includes(index)) {
+                e.target.classList.add('mine');
+                alert('遊戲結束!');
+                revealAllMines();
+            } else {
+                const count = getMineCount(index);
+                e.target.classList.add('revealed');
+                e.target.textContent = count > 0 ? count : '';
+                if (count === 0) {
+                    revealAdjacentCells(index);
+                }
+            }
+        }
+
+        function getMineCount(index) {
+            let count = 0;
+            const adjacentCells = getAdjacentCells(index);
+            for (let cell of adjacentCells) {
+                if (mines.includes(cell)) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        function getAdjacentCells(index) {
+            const row = Math.floor(index / size);
+            const col = index % size;
+            const cells = [];
+
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const newRow = row + i;
+                    const newCol = col + j;
+                    if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size) {
+                        cells.push(newRow * size + newCol);
+                    }
+                }
+            }
+
+            return cells;
+        }
+
+        function revealAdjacentCells(index) {
+            const adjacentCells = getAdjacentCells(index);
+            for (let cellIndex of adjacentCells) {
+                const cell = cells[cellIndex];
+                if (!cell.classList.contains('revealed')) {
+                    cell.click();
+                }
+            }
+        }
+
+        function revealAllMines() {
+            for (let index of mines) {
+                cells[index].classList.add('mine');
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
